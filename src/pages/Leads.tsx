@@ -51,6 +51,7 @@ import { StageBadge, PriorityBadge, StatusBadge } from '@/components/ui/stage-ba
 import { Lead, LeadStage, LeadPriority } from '@/types/crm';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { ImportLeadsDialog } from '@/components/leads/ImportLeadsDialog';
 
 const Leads = () => {
   const [leads, setLeads] = useState<Lead[]>(mockLeads);
@@ -60,7 +61,59 @@ const Leads = () => {
   const [stageFilter, setStageFilter] = useState<string>('all');
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [callerFilter, setCallerFilter] = useState<string>('all');
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
   const { toast } = useToast();
+
+  // Handle imported leads
+  const handleImportLeads = (importedLeads: Partial<Lead>[]) => {
+    const newLeads = importedLeads.map((lead, idx) => ({
+      ...lead,
+      id: `imported_${Date.now()}_${idx}`,
+      status: lead.status || 'active',
+      stage: lead.stage || 'new',
+      priority: lead.priority || 'warm',
+      category: lead.category || 'india_property',
+      value: lead.value || 0,
+      source: lead.source || 'other',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    })) as Lead[];
+
+    setLeads(prev => [...newLeads, ...prev]);
+    toast({ 
+      title: 'Import successful!', 
+      description: `${newLeads.length} leads have been added to your list` 
+    });
+  };
+
+  // Export leads to CSV
+  const handleExportCSV = () => {
+    const headers = ['Name', 'Phone', 'Email', 'City', 'Value', 'Source', 'Stage', 'Priority', 'Status', 'Project', 'Assigned To', 'Created At'];
+    const csvContent = [
+      headers.join(','),
+      ...filteredLeads.map(lead => [
+        `"${lead.name}"`,
+        `"${lead.phone}"`,
+        `"${lead.email}"`,
+        `"${lead.city}"`,
+        lead.value,
+        leadSourceLabels[lead.source] || lead.source,
+        lead.stage,
+        lead.priority,
+        lead.status,
+        `"${lead.projectName || ''}"`,
+        `"${lead.assignedCallerName || ''}"`,
+        lead.createdAt
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `leads_export_${new Date().toISOString().split('T')[0]}.csv`;
+    link.click();
+    toast({ title: 'Export complete', description: `${filteredLeads.length} leads exported to CSV` });
+  };
 
   // Format currency
   const formatCurrency = (value: number) => {
@@ -142,11 +195,11 @@ const Leads = () => {
           <p className="text-muted-foreground mt-1">Manage and track your sales leads</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2" onClick={() => setImportDialogOpen(true)}>
             <Upload className="w-4 h-4" />
             Import
           </Button>
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2" onClick={handleExportCSV}>
             <Download className="w-4 h-4" />
             Export
           </Button>
@@ -477,6 +530,13 @@ const Leads = () => {
           ))}
         </div>
       )}
+
+      {/* Import Dialog */}
+      <ImportLeadsDialog
+        open={importDialogOpen}
+        onOpenChange={setImportDialogOpen}
+        onImport={handleImportLeads}
+      />
     </div>
   );
 };
