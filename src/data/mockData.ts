@@ -1,0 +1,78 @@
+import { Lead, Caller, DashboardStats, Activity } from '@/types/crm';
+
+export const mockCallers: Caller[] = [
+  { id: '1', username: 'rahul_sharma', name: 'Rahul Sharma', email: 'rahul@vedavi.com', phone: '+91 98765 43210', role: 'caller', status: 'active', createdAt: '2024-01-15' },
+  { id: '2', username: 'priya_patel', name: 'Priya Patel', email: 'priya@vedavi.com', phone: '+91 98765 43211', role: 'caller', status: 'active', createdAt: '2024-02-01' },
+  { id: '3', username: 'amit_singh', name: 'Amit Singh', email: 'amit@vedavi.com', phone: '+91 98765 43212', role: 'caller', status: 'active', createdAt: '2024-02-15' },
+  { id: '4', username: 'neha_gupta', name: 'Neha Gupta', email: 'neha@vedavi.com', phone: '+91 98765 43213', role: 'admin', status: 'active', createdAt: '2024-01-01' },
+];
+
+export const mockLeads: Lead[] = [
+  { id: '1', name: 'Vikram Malhotra', phone: '+91 98112 34567', email: 'vikram.m@email.com', city: 'Mumbai', value: 15000000, source: 'website', stage: 'new', priority: 'hot', status: 'active', category: 'india_property', assignedCaller: '1', assignedCallerName: 'Rahul Sharma', projectName: 'Lodha Park', nextFollowUp: '2024-12-15', notes: 'Interested in 3BHK', createdAt: '2024-12-13T10:30:00', updatedAt: '2024-12-13T10:30:00' },
+  { id: '2', name: 'Ananya Reddy', phone: '+91 99001 12345', email: 'ananya.r@email.com', city: 'Bangalore', value: 8500000, source: 'google_ads', stage: 'qualified', priority: 'warm', status: 'active', category: 'india_property', assignedCaller: '2', assignedCallerName: 'Priya Patel', projectName: 'Prestige Lakeside', createdAt: '2024-12-12T14:20:00', updatedAt: '2024-12-12T14:20:00' },
+  { id: '3', name: 'Rajesh Kumar', phone: '+91 98234 56789', email: 'rajesh.k@email.com', city: 'Delhi', value: 25000000, source: 'referral', stage: 'proposal', priority: 'hot', status: 'active', category: 'dubai_property', assignedCaller: '1', assignedCallerName: 'Rahul Sharma', projectName: 'Palm Jumeirah Villa', nextFollowUp: '2024-12-14', createdAt: '2024-12-10T09:00:00', updatedAt: '2024-12-12T11:00:00' },
+  { id: '4', name: 'Meera Iyer', phone: '+91 97890 12345', email: 'meera.i@email.com', city: 'Chennai', value: 5500000, source: 'social_media', stage: 'negotiation', priority: 'hot', status: 'active', category: 'india_property', assignedCaller: '3', assignedCallerName: 'Amit Singh', projectName: 'DLF Cyber City', createdAt: '2024-12-08T16:45:00', updatedAt: '2024-12-13T09:00:00' },
+  { id: '5', name: 'Arjun Nair', phone: '+91 96543 21098', email: 'arjun.n@email.com', city: 'Hyderabad', value: 12000000, source: 'walk_in', stage: 'won', priority: 'warm', status: 'active', category: 'india_property', assignedCaller: '2', assignedCallerName: 'Priya Patel', projectName: 'Phoenix Towers', createdAt: '2024-12-01T11:30:00', updatedAt: '2024-12-10T15:00:00' },
+  { id: '6', name: 'Kavitha Menon', phone: '+91 95678 90123', email: 'kavitha.m@email.com', city: 'Pune', value: 7800000, source: 'website', stage: 'new', priority: 'cold', status: 'active', category: 'india_property', assignedCaller: '3', assignedCallerName: 'Amit Singh', createdAt: '2024-12-13T08:00:00', updatedAt: '2024-12-13T08:00:00' },
+  { id: '7', name: 'Suresh Babu', phone: '+91 94321 09876', email: 'suresh.b@email.com', city: 'Kolkata', value: 4500000, source: 'google_ads', stage: 'lost', priority: 'cold', status: 'not_interested', category: 'loans', createdAt: '2024-11-25T13:00:00', updatedAt: '2024-12-05T10:00:00' },
+  { id: '8', name: 'Divya Sharma', phone: '+91 93456 78901', email: 'divya.s@email.com', city: 'Jaipur', value: 18000000, source: 'referral', stage: 'qualified', priority: 'hot', status: 'active', category: 'australia_property', assignedCaller: '1', assignedCallerName: 'Rahul Sharma', projectName: 'Sydney Harbour View', nextFollowUp: '2024-12-16', createdAt: '2024-12-11T10:00:00', updatedAt: '2024-12-13T12:00:00' },
+  { id: '9', name: 'Karthik Rajan', phone: '+91 92109 87654', email: 'karthik.r@email.com', city: 'Ahmedabad', value: 9200000, source: 'social_media', stage: 'proposal', priority: 'warm', status: 'active', category: 'india_property', assignedCaller: '2', assignedCallerName: 'Priya Patel', projectName: 'Godrej Platinum', createdAt: '2024-12-09T15:30:00', updatedAt: '2024-12-12T16:00:00' },
+  { id: '10', name: 'Lakshmi Venkat', phone: '+91 91098 76543', email: 'lakshmi.v@email.com', city: 'Surat', value: 6700000, source: 'website', stage: 'new', priority: 'warm', status: 'active', category: 'india_property', createdAt: '2024-12-13T11:00:00', updatedAt: '2024-12-13T11:00:00' },
+];
+
+export const mockDashboardStats: DashboardStats = {
+  activeLeads: 156,
+  propertiesListed: 42,
+  dealsClosed: 28,
+  scheduledViewings: 15,
+  newToday: 8,
+  thisMonthDeals: 12,
+  totalValue: 156700000,
+  hotLeads: 23,
+};
+
+export const mockActivities: Activity[] = [
+  { id: '1', leadId: '1', type: 'created', description: 'New lead created', userId: '4', userName: 'System', createdAt: '2024-12-13T10:30:00' },
+  { id: '2', leadId: '1', type: 'assigned', description: 'Lead assigned to Rahul Sharma', userId: '4', userName: 'Neha Gupta', createdAt: '2024-12-13T10:31:00' },
+  { id: '3', leadId: '4', type: 'stage_changed', description: 'Stage changed from Proposal to Negotiation', userId: '3', userName: 'Amit Singh', createdAt: '2024-12-13T09:00:00' },
+  { id: '4', leadId: '8', type: 'call_logged', description: 'Outbound call - 15 mins - Discussed property details', userId: '1', userName: 'Rahul Sharma', createdAt: '2024-12-13T12:00:00' },
+  { id: '5', leadId: '3', type: 'note_added', description: 'Client requested virtual tour of Dubai property', userId: '1', userName: 'Rahul Sharma', createdAt: '2024-12-12T11:00:00' },
+];
+
+export const leadSourceLabels: Record<string, string> = {
+  website: 'Website',
+  google_ads: 'Google Ads',
+  referral: 'Referral',
+  social_media: 'Social Media',
+  walk_in: 'Walk-in',
+  other: 'Other',
+};
+
+export const leadStageLabels: Record<string, string> = {
+  new: 'New Lead',
+  qualified: 'Qualified',
+  proposal: 'Proposal',
+  negotiation: 'Negotiation',
+  won: 'Closed Won',
+  lost: 'Closed Lost',
+};
+
+export const leadPriorityLabels: Record<string, string> = {
+  hot: 'Hot',
+  warm: 'Warm',
+  cold: 'Cold',
+};
+
+export const leadStatusLabels: Record<string, string> = {
+  active: 'Active',
+  inactive: 'Inactive',
+  paused: 'Paused',
+  not_interested: 'Not Interested',
+};
+
+export const leadCategoryLabels: Record<string, string> = {
+  dubai_property: 'Dubai Property',
+  australia_property: 'Australia Property',
+  india_property: 'India Property',
+  loans: 'Loans',
+};
