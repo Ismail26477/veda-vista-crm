@@ -52,6 +52,7 @@ import { Lead, LeadStage, LeadPriority } from '@/types/crm';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ImportLeadsDialog } from '@/components/leads/ImportLeadsDialog';
+import { LeadDetailDrawer } from '@/components/leads/LeadDetailDrawer';
 
 const Leads = () => {
   const [leads, setLeads] = useState<Lead[]>(mockLeads);
@@ -62,6 +63,8 @@ const Leads = () => {
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [callerFilter, setCallerFilter] = useState<string>('all');
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
   const { toast } = useToast();
 
   // Handle imported leads
@@ -162,6 +165,18 @@ const Leads = () => {
       lead.id === leadId ? { ...lead, priority: newPriority, updatedAt: new Date().toISOString() } : lead
     ));
     toast({ title: 'Priority updated', description: `Lead priority changed to ${newPriority}` });
+  };
+
+  // Handle lead update from drawer
+  const handleUpdateLead = (updatedLead: Lead) => {
+    setLeads(prev => prev.map(lead => lead.id === updatedLead.id ? updatedLead : lead));
+    setSelectedLead(updatedLead);
+  };
+
+  // Open lead detail
+  const openLeadDetail = (lead: Lead) => {
+    setSelectedLead(lead);
+    setDetailDrawerOpen(true);
   };
 
   // Handle select all
@@ -369,8 +384,8 @@ const Leads = () => {
               </TableHeader>
               <TableBody>
                 {filteredLeads.map((lead) => (
-                  <TableRow key={lead.id} className="hover:bg-muted/50 transition-colors">
-                    <TableCell>
+                  <TableRow key={lead.id} className="hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => openLeadDetail(lead)}>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <Checkbox
                         checked={selectedLeads.includes(lead.id)}
                         onCheckedChange={(checked) => {
@@ -393,7 +408,7 @@ const Leads = () => {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center gap-2">
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => window.open(`tel:${lead.phone}`)}>
                           <Phone className="w-4 h-4 text-success" />
@@ -409,7 +424,7 @@ const Leads = () => {
                     <TableCell>
                       <span className="font-semibold text-foreground">{formatCurrency(lead.value)}</span>
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <Select
                         value={lead.stage}
                         onValueChange={(value) => handleStageChange(lead.id, value as LeadStage)}
@@ -427,7 +442,7 @@ const Leads = () => {
                         </SelectContent>
                       </Select>
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <Select
                         value={lead.priority}
                         onValueChange={(value) => handlePriorityChange(lead.id, value as LeadPriority)}
@@ -445,7 +460,7 @@ const Leads = () => {
                     <TableCell>
                       <span className="text-sm text-muted-foreground">{leadSourceLabels[lead.source]}</span>
                     </TableCell>
-                    <TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
                       <span className="text-sm text-foreground">{lead.assignedCallerName || '-'}</span>
                     </TableCell>
                     <TableCell>
@@ -456,15 +471,15 @@ const Leads = () => {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openLeadDetail(lead)}>
                             <Eye className="w-4 h-4 mr-2" />
                             View Details
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openLeadDetail(lead)}>
                             <Edit className="w-4 h-4 mr-2" />
                             Edit Lead
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => { setSelectedLead(lead); setDetailDrawerOpen(true); }}>
                             <Phone className="w-4 h-4 mr-2" />
                             Log Call
                           </DropdownMenuItem>
@@ -485,7 +500,7 @@ const Leads = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredLeads.map((lead) => (
-            <Card key={lead.id} className="hover:shadow-lg transition-all duration-200 hover:-translate-y-1">
+            <Card key={lead.id} className="hover:shadow-lg transition-all duration-200 hover:-translate-y-1 cursor-pointer" onClick={() => openLeadDetail(lead)}>
               <CardContent className="p-5">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
@@ -515,7 +530,7 @@ const Leads = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border">
+                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border" onClick={(e) => e.stopPropagation()}>
                   <Button variant="outline" size="sm" className="flex-1 gap-1" onClick={() => window.open(`tel:${lead.phone}`)}>
                     <Phone className="w-4 h-4" />
                     Call
@@ -536,6 +551,14 @@ const Leads = () => {
         open={importDialogOpen}
         onOpenChange={setImportDialogOpen}
         onImport={handleImportLeads}
+      />
+
+      {/* Lead Detail Drawer */}
+      <LeadDetailDrawer
+        lead={selectedLead}
+        open={detailDrawerOpen}
+        onOpenChange={setDetailDrawerOpen}
+        onUpdateLead={handleUpdateLead}
       />
     </div>
   );

@@ -1,4 +1,4 @@
-import { Lead, Caller, DashboardStats, Activity } from '@/types/crm';
+import { Lead, Caller, DashboardStats, Activity, CallLog } from '@/types/crm';
 
 export const mockCallers: Caller[] = [
   { id: '1', username: 'rahul_sharma', name: 'Rahul Sharma', email: 'rahul@vedavi.com', phone: '+91 98765 43210', role: 'caller', status: 'active', createdAt: '2024-01-15' },
@@ -76,3 +76,11 @@ export const leadCategoryLabels: Record<string, string> = {
   india_property: 'India Property',
   loans: 'Loans',
 };
+
+export const mockCallLogs: CallLog[] = [
+  { id: 'c1', leadId: '1', callerId: '1', callerName: 'Rahul Sharma', type: 'outbound', duration: 420, notes: 'Discussed 3BHK options in Lodha Park. Client interested in site visit.', status: 'completed', nextFollowUp: '2024-12-15', createdAt: '2024-12-13T14:30:00' },
+  { id: 'c2', leadId: '1', callerId: '1', callerName: 'Rahul Sharma', type: 'outbound', duration: 180, notes: 'Follow-up call. Confirmed site visit for tomorrow.', status: 'completed', createdAt: '2024-12-13T10:00:00' },
+  { id: 'c3', leadId: '3', callerId: '1', callerName: 'Rahul Sharma', type: 'outbound', duration: 900, notes: 'Long discussion about Dubai property investment. Client requested virtual tour.', status: 'completed', nextFollowUp: '2024-12-14', createdAt: '2024-12-12T11:00:00' },
+  { id: 'c4', leadId: '4', callerId: '3', callerName: 'Amit Singh', type: 'inbound', duration: 300, notes: 'Client called to negotiate price. Offered 5% discount.', status: 'completed', createdAt: '2024-12-13T09:00:00' },
+  { id: 'c5', leadId: '8', callerId: '1', callerName: 'Rahul Sharma', type: 'outbound', duration: 600, notes: 'Discussed Sydney property details. Client very interested.', status: 'completed', nextFollowUp: '2024-12-16', createdAt: '2024-12-13T12:00:00' },
+];
