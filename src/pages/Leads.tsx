@@ -18,7 +18,8 @@ import {
   Users,
   Flame,
   IndianRupee,
-  Calendar
+  Calendar,
+  Link2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,6 +54,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { ImportLeadsDialog } from '@/components/leads/ImportLeadsDialog';
 import { LeadDetailDrawer } from '@/components/leads/LeadDetailDrawer';
+import { IntegrationImportDialog } from '@/components/leads/IntegrationImportDialog';
 
 const Leads = () => {
   const [leads, setLeads] = useState<Lead[]>(mockLeads);
@@ -63,6 +65,7 @@ const Leads = () => {
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [callerFilter, setCallerFilter] = useState<string>('all');
   const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [integrationDialogOpen, setIntegrationDialogOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
   const { toast } = useToast();
@@ -210,10 +213,24 @@ const Leads = () => {
           <p className="text-muted-foreground mt-1">Manage and track your sales leads</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="gap-2" onClick={() => setImportDialogOpen(true)}>
-            <Upload className="w-4 h-4" />
-            Import
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Upload className="w-4 h-4" />
+                Import
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setImportDialogOpen(true)}>
+                <Upload className="w-4 h-4 mr-2" />
+                Import from Excel/CSV
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIntegrationDialogOpen(true)}>
+                <Link2 className="w-4 h-4 mr-2" />
+                Import from Integrations
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Button variant="outline" className="gap-2" onClick={handleExportCSV}>
             <Download className="w-4 h-4" />
             Export
@@ -559,6 +576,13 @@ const Leads = () => {
         open={detailDrawerOpen}
         onOpenChange={setDetailDrawerOpen}
         onUpdateLead={handleUpdateLead}
+      />
+
+      {/* Integration Import Dialog */}
+      <IntegrationImportDialog
+        open={integrationDialogOpen}
+        onOpenChange={setIntegrationDialogOpen}
+        onImport={handleImportLeads}
       />
     </div>
   );
