@@ -78,7 +78,10 @@ export const IntegrationImportDialog = ({ open, onOpenChange, onImport }: Integr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
+      <DialogContent
+        className="max-w-3xl max-h-[85vh] overflow-y-auto"
+        onCloseAutoFocus={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle className="font-display">Import from Integrations</DialogTitle>
           <DialogDescription>
