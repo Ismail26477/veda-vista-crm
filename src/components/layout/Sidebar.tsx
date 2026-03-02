@@ -8,6 +8,7 @@ import {
   Settings, 
   Phone,
   Headphones,
+  LogOut,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
