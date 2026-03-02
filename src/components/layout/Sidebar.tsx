@@ -29,6 +29,7 @@ const Sidebar = () => {
     { icon: Kanban, label: 'Pipeline', path: '/pipeline' },
     { icon: UserCheck, label: 'Customers', path: '/customers' },
     { icon: BarChart3, label: 'Reports', path: '/reports' },
+    { icon: Phone, label: 'Call Tracker', path: '/call-tracker' },
     ...(isAdmin ? [{ icon: Phone, label: 'Callers', path: '/callers' }] : []),
     ...(isAdmin ? [{ icon: Settings, label: 'Settings', path: '/settings' }] : []),
   ];

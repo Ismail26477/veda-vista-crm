@@ -12,6 +12,7 @@ import Pipeline from "./pages/Pipeline";
 import Customers from "./pages/Customers";
 import Reports from "./pages/Reports";
 import Callers from "./pages/Callers";
+import CallTracker from "./pages/CallTracker";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
@@ -63,6 +64,7 @@ const AppRoutes = () => {
         <Route path="/pipeline" element={<Pipeline />} />
         <Route path="/customers" element={<Customers />} />
         <Route path="/reports" element={<Reports />} />
+        <Route path="/call-tracker" element={<CallTracker />} />
         <Route path="/callers" element={<AdminRoute><Callers /></AdminRoute>} />
         <Route path="/settings" element={<AdminRoute><Settings /></AdminRoute>} />
       </Route>
