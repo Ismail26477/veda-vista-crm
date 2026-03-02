@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { mockCallLogs, mockLeads, mockCallers } from '@/data/mockData';
 import { CallLog } from '@/types/crm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,6 +20,7 @@ import {
 import {
   Phone, PhoneIncoming, PhoneOutgoing, PhoneMissed, Clock, Timer,
   Plus, Search, TrendingUp, Users, Calendar, BarChart3, Target, Headphones,
+  Play, Pause, Square, MessageCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
@@ -48,6 +49,79 @@ const CallTracker = () => {
     status: 'completed' as 'completed' | 'missed' | 'in_progress',
     nextFollowUp: '',
   });
+
+  // Live Call Timer
+  const [timerState, setTimerState] = useState<'idle' | 'running' | 'paused'>('idle');
+  const [timerSeconds, setTimerSeconds] = useState(0);
+  const [timerLeadId, setTimerLeadId] = useState('');
+  const [timerType, setTimerType] = useState<'inbound' | 'outbound'>('outbound');
+  const [isTimerDialogOpen, setIsTimerDialogOpen] = useState(false);
+  const [timerNotes, setTimerNotes] = useState('');
+  const [timerFollowUp, setTimerFollowUp] = useState('');
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (timerState === 'running') {
+      intervalRef.current = setInterval(() => setTimerSeconds(s => s + 1), 1000);
+    } else {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    }
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [timerState]);
+
+  const startTimer = () => {
+    if (!timerLeadId) {
+      toast({ title: 'Select a lead first', variant: 'destructive' });
+      return;
+    }
+    setTimerState('running');
+  };
+
+  const pauseTimer = () => setTimerState('paused');
+  const resumeTimer = () => setTimerState('running');
+
+  const stopTimer = () => {
+    setTimerState('idle');
+    if (timerSeconds > 0 && timerLeadId) {
+      const newLog: CallLog = {
+        id: `c${Date.now()}`,
+        leadId: timerLeadId,
+        callerId: user?.id || '1',
+        callerName: user?.name || 'Unknown',
+        type: timerType,
+        duration: timerSeconds,
+        notes: timerNotes,
+        status: 'completed',
+        nextFollowUp: timerFollowUp || undefined,
+        createdAt: new Date().toISOString(),
+      };
+      setCallLogs(prev => [newLog, ...prev]);
+      toast({ title: 'Call auto-logged', description: `Duration: ${formatDuration(timerSeconds)}` });
+    }
+    setTimerSeconds(0);
+    setTimerNotes('');
+    setTimerFollowUp('');
+    setIsTimerDialogOpen(false);
+  };
+
+  const formatTimer = (s: number) => {
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+  };
+
+  // WhatsApp follow-up
+  const sendWhatsAppFollowUp = (leadId: string) => {
+    const lead = mockLeads.find(l => l.id === leadId);
+    if (!lead) return;
+    const phone = lead.phone.replace(/[^0-9]/g, '');
+    const message = encodeURIComponent(
+      `Hi ${lead.name}, thank you for your time on our call! As discussed, I'll follow up with more details about the property. Feel free to reach out if you have any questions. — ${user?.name || 'Your Agent'}`
+    );
+    window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+    toast({ title: 'WhatsApp opened', description: `Follow-up message for ${lead.name}` });
+  };
 
   // Stats
   const stats = useMemo(() => {
@@ -154,16 +228,56 @@ const CallTracker = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-3xl font-bold font-display text-foreground">Call Tracker</h1>
           <p className="text-muted-foreground mt-1">Track, analyze, and manage all your calls</p>
         </div>
-        <Button className="btn-gradient-primary gap-2" onClick={() => setIsLogDialogOpen(true)}>
-          <Plus className="w-4 h-4" />
-          Log Call
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" className="gap-2" onClick={() => setIsTimerDialogOpen(true)}>
+            <Play className="w-4 h-4" />
+            Live Call
+          </Button>
+          <Button className="btn-gradient-primary gap-2" onClick={() => setIsLogDialogOpen(true)}>
+            <Plus className="w-4 h-4" />
+            Log Call
+          </Button>
+        </div>
       </div>
+
+      {/* Live Timer Banner */}
+      {timerState !== 'idle' && (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardContent className="p-4 flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-4">
+              <div className={cn(
+                "w-3 h-3 rounded-full",
+                timerState === 'running' ? 'bg-success animate-pulse' : 'bg-secondary'
+              )} />
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  Live Call with <span className="font-semibold text-foreground">{mockLeads.find(l => l.id === timerLeadId)?.name}</span>
+                </p>
+                <p className="text-3xl font-mono font-bold text-foreground">{formatTimer(timerSeconds)}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {timerState === 'running' ? (
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={pauseTimer}>
+                  <Pause className="w-4 h-4" /> Pause
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={resumeTimer}>
+                  <Play className="w-4 h-4" /> Resume
+                </Button>
+              )}
+              <Button variant="destructive" size="sm" className="gap-1.5" onClick={stopTimer}>
+                <Square className="w-4 h-4" /> End & Log
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
@@ -368,12 +482,13 @@ const CallTracker = () => {
                       <TableHead>Notes</TableHead>
                       <TableHead>Follow-up</TableHead>
                       <TableHead>Date</TableHead>
+                      <TableHead>Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredLogs.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center py-10 text-muted-foreground">
+                       <TableCell colSpan={9} className="text-center py-10 text-muted-foreground">
                           No call logs found
                         </TableCell>
                       </TableRow>
@@ -430,6 +545,17 @@ const CallTracker = () => {
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {new Date(log.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-success hover:text-success hover:bg-success/10"
+                              onClick={() => sendWhatsAppFollowUp(log.leadId)}
+                              title="Send WhatsApp follow-up"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))
@@ -563,6 +689,95 @@ const CallTracker = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsLogDialogOpen(false)}>Cancel</Button>
             <Button className="btn-gradient-primary" onClick={handleLogCall}>Log Call</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Live Call Timer Dialog */}
+      <Dialog open={isTimerDialogOpen} onOpenChange={(open) => {
+        if (!open && timerState === 'idle') setIsTimerDialogOpen(false);
+        else if (!open && timerState !== 'idle') {
+          // Don't close while timer is running, just minimize
+        } else {
+          setIsTimerDialogOpen(open);
+        }
+      }}>
+        <DialogContent onCloseAutoFocus={e => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              <Timer className="w-5 h-5 text-primary" /> Live Call Timer
+            </DialogTitle>
+            <DialogDescription>Start a call and the duration will be auto-logged when you end it</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Lead *</Label>
+              <Select value={timerLeadId} onValueChange={setTimerLeadId} disabled={timerState !== 'idle'}>
+                <SelectTrigger><SelectValue placeholder="Select lead" /></SelectTrigger>
+                <SelectContent>
+                  {mockLeads.map(l => (
+                    <SelectItem key={l.id} value={l.id}>{l.name} — {l.phone}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Call Type</Label>
+              <Select value={timerType} onValueChange={v => setTimerType(v as any)} disabled={timerState !== 'idle'}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="outbound">Outbound</SelectItem>
+                  <SelectItem value="inbound">Inbound</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Timer Display */}
+            <div className="text-center py-6">
+              <p className="text-5xl font-mono font-bold text-foreground">{formatTimer(timerSeconds)}</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                {timerState === 'idle' ? 'Ready to start' : timerState === 'running' ? 'Call in progress...' : 'Paused'}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Notes</Label>
+              <Textarea placeholder="Take notes during the call..." value={timerNotes} onChange={e => setTimerNotes(e.target.value)} rows={2} />
+            </div>
+            <div className="space-y-2">
+              <Label>Next Follow-up</Label>
+              <Input type="date" value={timerFollowUp} onChange={e => setTimerFollowUp(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            {timerState === 'idle' && (
+              <>
+                <Button variant="outline" onClick={() => setIsTimerDialogOpen(false)}>Cancel</Button>
+                <Button className="btn-gradient-primary gap-1.5" onClick={() => { startTimer(); }}>
+                  <Play className="w-4 h-4" /> Start Call
+                </Button>
+              </>
+            )}
+            {timerState === 'running' && (
+              <>
+                <Button variant="outline" className="gap-1.5" onClick={pauseTimer}>
+                  <Pause className="w-4 h-4" /> Pause
+                </Button>
+                <Button variant="destructive" className="gap-1.5" onClick={stopTimer}>
+                  <Square className="w-4 h-4" /> End & Log
+                </Button>
+              </>
+            )}
+            {timerState === 'paused' && (
+              <>
+                <Button variant="outline" className="gap-1.5" onClick={resumeTimer}>
+                  <Play className="w-4 h-4" /> Resume
+                </Button>
+                <Button variant="destructive" className="gap-1.5" onClick={stopTimer}>
+                  <Square className="w-4 h-4" /> End & Log
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
