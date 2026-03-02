@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useCallback, useEffect } from 'react';
 import { mockCallLogs, mockLeads, mockCallers } from '@/data/mockData';
 import { CallLog } from '@/types/crm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,6 +20,7 @@ import {
 import {
   Phone, PhoneIncoming, PhoneOutgoing, PhoneMissed, Clock, Timer,
   Plus, Search, TrendingUp, Users, Calendar, BarChart3, Target, Headphones,
+  Play, Pause, Square, MessageCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
