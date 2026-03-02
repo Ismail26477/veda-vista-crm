@@ -50,6 +50,79 @@ const CallTracker = () => {
     nextFollowUp: '',
   });
 
+  // Live Call Timer
+  const [timerState, setTimerState] = useState<'idle' | 'running' | 'paused'>('idle');
+  const [timerSeconds, setTimerSeconds] = useState(0);
+  const [timerLeadId, setTimerLeadId] = useState('');
+  const [timerType, setTimerType] = useState<'inbound' | 'outbound'>('outbound');
+  const [isTimerDialogOpen, setIsTimerDialogOpen] = useState(false);
+  const [timerNotes, setTimerNotes] = useState('');
+  const [timerFollowUp, setTimerFollowUp] = useState('');
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (timerState === 'running') {
+      intervalRef.current = setInterval(() => setTimerSeconds(s => s + 1), 1000);
+    } else {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    }
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, [timerState]);
+
+  const startTimer = () => {
+    if (!timerLeadId) {
+      toast({ title: 'Select a lead first', variant: 'destructive' });
+      return;
+    }
+    setTimerState('running');
+  };
+
+  const pauseTimer = () => setTimerState('paused');
+  const resumeTimer = () => setTimerState('running');
+
+  const stopTimer = () => {
+    setTimerState('idle');
+    if (timerSeconds > 0 && timerLeadId) {
+      const newLog: CallLog = {
+        id: `c${Date.now()}`,
+        leadId: timerLeadId,
+        callerId: user?.id || '1',
+        callerName: user?.name || 'Unknown',
+        type: timerType,
+        duration: timerSeconds,
+        notes: timerNotes,
+        status: 'completed',
+        nextFollowUp: timerFollowUp || undefined,
+        createdAt: new Date().toISOString(),
+      };
+      setCallLogs(prev => [newLog, ...prev]);
+      toast({ title: 'Call auto-logged', description: `Duration: ${formatDuration(timerSeconds)}` });
+    }
+    setTimerSeconds(0);
+    setTimerNotes('');
+    setTimerFollowUp('');
+    setIsTimerDialogOpen(false);
+  };
+
+  const formatTimer = (s: number) => {
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+  };
+
+  // WhatsApp follow-up
+  const sendWhatsAppFollowUp = (leadId: string) => {
+    const lead = mockLeads.find(l => l.id === leadId);
+    if (!lead) return;
+    const phone = lead.phone.replace(/[^0-9]/g, '');
+    const message = encodeURIComponent(
+      `Hi ${lead.name}, thank you for your time on our call! As discussed, I'll follow up with more details about the property. Feel free to reach out if you have any questions. — ${user?.name || 'Your Agent'}`
+    );
+    window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+    toast({ title: 'WhatsApp opened', description: `Follow-up message for ${lead.name}` });
+  };
+
   // Stats
   const stats = useMemo(() => {
     const total = callLogs.length;
