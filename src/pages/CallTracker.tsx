@@ -482,12 +482,13 @@ const CallTracker = () => {
                       <TableHead>Notes</TableHead>
                       <TableHead>Follow-up</TableHead>
                       <TableHead>Date</TableHead>
+                      <TableHead>Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredLogs.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center py-10 text-muted-foreground">
+                       <TableCell colSpan={9} className="text-center py-10 text-muted-foreground">
                           No call logs found
                         </TableCell>
                       </TableRow>
@@ -544,6 +545,17 @@ const CallTracker = () => {
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground">
                             {new Date(log.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-success hover:text-success hover:bg-success/10"
+                              onClick={() => sendWhatsAppFollowUp(log.leadId)}
+                              title="Send WhatsApp follow-up"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))
@@ -677,6 +689,95 @@ const CallTracker = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsLogDialogOpen(false)}>Cancel</Button>
             <Button className="btn-gradient-primary" onClick={handleLogCall}>Log Call</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Live Call Timer Dialog */}
+      <Dialog open={isTimerDialogOpen} onOpenChange={(open) => {
+        if (!open && timerState === 'idle') setIsTimerDialogOpen(false);
+        else if (!open && timerState !== 'idle') {
+          // Don't close while timer is running, just minimize
+        } else {
+          setIsTimerDialogOpen(open);
+        }
+      }}>
+        <DialogContent onCloseAutoFocus={e => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              <Timer className="w-5 h-5 text-primary" /> Live Call Timer
+            </DialogTitle>
+            <DialogDescription>Start a call and the duration will be auto-logged when you end it</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Lead *</Label>
+              <Select value={timerLeadId} onValueChange={setTimerLeadId} disabled={timerState !== 'idle'}>
+                <SelectTrigger><SelectValue placeholder="Select lead" /></SelectTrigger>
+                <SelectContent>
+                  {mockLeads.map(l => (
+                    <SelectItem key={l.id} value={l.id}>{l.name} — {l.phone}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Call Type</Label>
+              <Select value={timerType} onValueChange={v => setTimerType(v as any)} disabled={timerState !== 'idle'}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="outbound">Outbound</SelectItem>
+                  <SelectItem value="inbound">Inbound</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Timer Display */}
+            <div className="text-center py-6">
+              <p className="text-5xl font-mono font-bold text-foreground">{formatTimer(timerSeconds)}</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                {timerState === 'idle' ? 'Ready to start' : timerState === 'running' ? 'Call in progress...' : 'Paused'}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Notes</Label>
+              <Textarea placeholder="Take notes during the call..." value={timerNotes} onChange={e => setTimerNotes(e.target.value)} rows={2} />
+            </div>
+            <div className="space-y-2">
+              <Label>Next Follow-up</Label>
+              <Input type="date" value={timerFollowUp} onChange={e => setTimerFollowUp(e.target.value)} />
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            {timerState === 'idle' && (
+              <>
+                <Button variant="outline" onClick={() => setIsTimerDialogOpen(false)}>Cancel</Button>
+                <Button className="btn-gradient-primary gap-1.5" onClick={() => { startTimer(); }}>
+                  <Play className="w-4 h-4" /> Start Call
+                </Button>
+              </>
+            )}
+            {timerState === 'running' && (
+              <>
+                <Button variant="outline" className="gap-1.5" onClick={pauseTimer}>
+                  <Pause className="w-4 h-4" /> Pause
+                </Button>
+                <Button variant="destructive" className="gap-1.5" onClick={stopTimer}>
+                  <Square className="w-4 h-4" /> End & Log
+                </Button>
+              </>
+            )}
+            {timerState === 'paused' && (
+              <>
+                <Button variant="outline" className="gap-1.5" onClick={resumeTimer}>
+                  <Play className="w-4 h-4" /> Resume
+                </Button>
+                <Button variant="destructive" className="gap-1.5" onClick={stopTimer}>
+                  <Square className="w-4 h-4" /> End & Log
+                </Button>
+              </>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
