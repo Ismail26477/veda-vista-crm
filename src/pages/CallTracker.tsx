@@ -228,16 +228,56 @@ const CallTracker = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-3xl font-bold font-display text-foreground">Call Tracker</h1>
           <p className="text-muted-foreground mt-1">Track, analyze, and manage all your calls</p>
         </div>
-        <Button className="btn-gradient-primary gap-2" onClick={() => setIsLogDialogOpen(true)}>
-          <Plus className="w-4 h-4" />
-          Log Call
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" className="gap-2" onClick={() => setIsTimerDialogOpen(true)}>
+            <Play className="w-4 h-4" />
+            Live Call
+          </Button>
+          <Button className="btn-gradient-primary gap-2" onClick={() => setIsLogDialogOpen(true)}>
+            <Plus className="w-4 h-4" />
+            Log Call
+          </Button>
+        </div>
       </div>
+
+      {/* Live Timer Banner */}
+      {timerState !== 'idle' && (
+        <Card className="border-primary/40 bg-primary/5">
+          <CardContent className="p-4 flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-4">
+              <div className={cn(
+                "w-3 h-3 rounded-full",
+                timerState === 'running' ? 'bg-success animate-pulse' : 'bg-secondary'
+              )} />
+              <div>
+                <p className="text-sm text-muted-foreground">
+                  Live Call with <span className="font-semibold text-foreground">{mockLeads.find(l => l.id === timerLeadId)?.name}</span>
+                </p>
+                <p className="text-3xl font-mono font-bold text-foreground">{formatTimer(timerSeconds)}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              {timerState === 'running' ? (
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={pauseTimer}>
+                  <Pause className="w-4 h-4" /> Pause
+                </Button>
+              ) : (
+                <Button variant="outline" size="sm" className="gap-1.5" onClick={resumeTimer}>
+                  <Play className="w-4 h-4" /> Resume
+                </Button>
+              )}
+              <Button variant="destructive" size="sm" className="gap-1.5" onClick={stopTimer}>
+                <Square className="w-4 h-4" /> End & Log
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
